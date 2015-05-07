@@ -23,6 +23,7 @@ from core import addRouteResource
 from core import addDataResource
 from core import addTableResource
 from core import getAllRoutesResource
+from core import deleteRoutesResource
 
 fmt = lambda obj: json.dumps(obj, indent=4, sort_keys=True)
 
@@ -54,6 +55,8 @@ def build_app(yml_path):
 		app.add_route('/addTable', addtableResource)
 		listroutesResource = getAllRoutesResource(configuration, meta_dbconn, dbconn)
 		app.add_route('/allRoutes', listroutesResource )
+		deleteroutesResource = deleteRoutesResource(configuration, meta_dbconn, dbconn)
+		app.add_route('/deleteRoute/id/{id}', deleteroutesResource )
 	except: 
 		exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
 		print('exception %s was thrown' % exceptionValue)

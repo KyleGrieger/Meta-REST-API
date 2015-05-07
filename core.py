@@ -176,7 +176,37 @@ class getAllRoutesResource(object):
             cursor = meta_dbconn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
             cursor.execute("select * from routes")
             routes = cursor.fetchall()
-            print(routes)
             return routes
+        finally:
+            self.meta_dbconn.putconn(meta_dbconn)
+
+class deleteRoutesResource(object):
+
+    def __init__(self, config, meta_dbconn, dbconn):
+        self.logger = logging.getLogger(__name__)
+        self.config = config
+        self.meta_dbconn = meta_dbconn
+        self.dbconn = dbconn
+        self.coreResource = coreResource
+
+    def on_get(self, req, resp, id):
+        self.id = id
+        result = self.delete_route()
+        self.logger.debug('Delete route by id')
+        resp.set_header('Content-Type', 'application/json')
+        resp.status = falcon.HTTP_200
+        resp.body = fmt(result)
+
+    def delete_route(self):
+        try:
+            meta_dbconn = self.meta_dbconn.getconn()
+            cursor = meta_dbconn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+            cursor.execute("DELETE FROM routes where id = %s" % self.id)
+            meta_dbconn.commit()
+            return "Sucessfully deleted route!"
+        except:
+            exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+            print('exception %s was thrown' % exceptionValue)
+            return "Oops something went wrong. Maybe there isn't a route with that id"
         finally:
             self.meta_dbconn.putconn(meta_dbconn)

@@ -95,3 +95,11 @@ As you might've guessed this adds data to your app database in the table specifi
 You should get a response:
 
 "Sucessfully added data!"
+
+    GET /deleteRoute/id/{id}
+
+Deletes route with specified id
+
+You should get a response:
+
+"Sucessfully deleted route!"
