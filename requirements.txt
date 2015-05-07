@@ -1,0 +1,5 @@
+psycopg2
+falcon==0.1.8
+gunicorn
+requests
+pyyaml

@@ -1,0 +1,10 @@
+meta-api-db: 
+  host: localhost
+  database: meta_api
+  user: XXXXXX
+  password: XXXXXX
+db:
+  host: localhost
+  database: app
+  user: XXXXXX
+  password: XXXXXX
