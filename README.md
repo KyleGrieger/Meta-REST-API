@@ -4,13 +4,13 @@ It's a Python 3 Falcon app that uses psycopg2 to connect to various PostgreSQL d
 
 ## Setup
 
-This is a Python 3 (technically it runs with either right now) app so you'll probably want to run with a python3 virtualenv. You must have 2 postgres databases running one for the Meta API and one for app data.  Your config.yml file must also be set up appropriately. (see sampleConfig.yml) create a table for routes in your meta api db
+This is a Python 3 (technically it runs with either right now) app so you'll probably want to run with a python3 virtualenv. You must have 2 postgres databases running one for the Meta API and one for app data.  Your config.yml file must also be set up appropriately. (see sampleConfig.yml) Create a table for routes in your Meta API db.
 
 Use The Query (this is going to change as the meta-rest api grows):
 	
-	CREATE TABLE route(id serial,route varchar(255),query varchar(255),type varchar(10)) 
+	CREATE TABLE routes(id serial,route varchar(255),query varchar(255),type varchar(10)) 
 
-This is the table that will store the routes that you add
+This is the table that will store the routes that you add.
 
 Start a virtual environment:
 
@@ -62,8 +62,8 @@ The form should look something like this
 		"route" : "/pokemon/type/{type}""
 		"query" : "select * from pokemon where type = {type}"
 	}
-	
-You should get a response back
+
+You should get a response:
 
 "Successfully added route!"
 
@@ -75,3 +75,23 @@ Now if you were to call
 	GET /pokemon/type/water
 
 You would get a response with data about all pokemon in your database with the type water
+
+	POST /addData
+
+The form should look something like this
+
+	{
+    "table" : "pokemon",
+    "data": [{"column": "id",
+            "value" : "6"},
+            {"column": "name",
+            "value" : "metapod"},
+            {"column": "type",
+            "value" : "grass"}]
+	}
+
+As you might've guessed this adds data to your app database in the table specified with the values specified
+
+You should get a response:
+
+"Sucessfully added data!"
