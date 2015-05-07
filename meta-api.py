@@ -23,8 +23,6 @@ from core import addRouteResource
 from core import addDataResource
 from core import addTableResource
 from core import getAllRoutesResource
-#from core import coreResource
-
 
 fmt = lambda obj: json.dumps(obj, indent=4, sort_keys=True)
 

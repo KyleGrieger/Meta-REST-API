@@ -1,11 +1,10 @@
 meta-api-db: 
   host: localhost
   database: meta_api
-  user: XXXXXX
-  password: XXXXXX
+  user: kylegrieger
+  password: bpg080
 db:
   host: localhost
   database: app
-  user: XXXXXX
-  password: XXXXXX
-  
+  user: kylegrieger
+  password: bpg080

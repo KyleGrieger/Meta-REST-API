@@ -5,7 +5,6 @@ import json
 import logging
 import falcon
 
-
 fmt = lambda obj: json.dumps(obj, indent=4, sort_keys=True)
 
 class coreResource(object):
