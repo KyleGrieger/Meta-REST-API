@@ -42,7 +42,6 @@ def build_app(yml_path):
 		cursor = meta_dbconn.cursor()
 		cursor.execute('select * from routes')
 		routes = cursor.fetchall()
-		print(routes)
 		for list in routes:
 			resource = coreResource(configuration, meta_dbconn, dbconn, list[2] )
 			app.add_route(list[1], resource)
