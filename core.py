@@ -198,4 +198,58 @@ class deleteRoutesResource(object):
             exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
             print('exception %s was thrown' % exceptionValue)
             return "Oops something went wrong. Maybe there isn't a route with that id"
+
+class initMetaDBResource(object):
+
+    def __init__(self, config, meta_dbconn, dbconn):
+        self.logger = logging.getLogger(__name__)
+        self.config = config
+        self.meta_dbconn = meta_dbconn
+        self.dbconn = dbconn
+
+    def on_get(self, req, resp):
+        result = self.initialize()
+        self.logger.debug('init Meta DB')
+        resp.set_header('Content-Type', 'application/json')
+        resp.status = falcon.HTTP_200
+        resp.body = fmt(result)
+
+    def initialize(self):
+        try:
+            cursor = self.meta_dbconn.cursor()
+            cursor.execute("create table routes(id integer primary key autoincrement,route varchar(255), query varchar(255),type varchar(255) default GET)")
+            self.meta_dbconn.commit()
+            return "Sucessfully initialized  Meta DB"
+        except:
+            exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+            print('exception %s was thrown' % exceptionValue)
+            return "Oops something went wrong."
+
+class initPokemonResource(object):
+
+    def __init__(self, config, meta_dbconn, dbconn):
+        self.logger = logging.getLogger(__name__)
+        self.config = config
+        self.meta_dbconn = meta_dbconn
+        self.dbconn = dbconn
+
+    def on_get(self, req, resp):
+        result = self.initializePokemon()
+        self.logger.debug('init Pokemon DB')
+        resp.set_header('Content-Type', 'application/json')
+        resp.status = falcon.HTTP_200
+        resp.body = fmt(result)
+
+    def initializePokemon(self):
+        try:
+            cursor = self.dbconn.cursor()
+            cursor.execute("create table pokemon(id integer primary key autoincrement,name varchar(255), type varchar(255),trainer varchar(255),favorite boolean default false)")
+            self.meta_dbconn.commit()
+            return "Sucessfully initialized  Pokemon DB"
+        except:
+            exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+            print('exception %s was thrown' % exceptionValue)
+            return "Oops something went wrong."
+
+
             
