@@ -12,8 +12,7 @@ from wsgiref import simple_server
 import os
 import sys
 import falcon
-import psycopg2
-import psycopg2.pool
+import sqlite3
 import json
 import logging
 import requests
@@ -38,12 +37,12 @@ def build_app(yml_path):
 		configuration = yaml.safe_load(data)
 		app = falcon.API(after=[cors_header])
 	try:
-		dbconn = psycopg2.pool.ThreadedConnectionPool(1, 20, user=configuration['db']['user'], password=configuration['db']['password'], host=configuration['db']['host'], database=configuration['db']['database'])
-		meta_dbconn = psycopg2.pool.ThreadedConnectionPool(1, 20, user=configuration['meta-api-db']['user'], password=configuration['meta-api-db']['password'], host=configuration['meta-api-db']['host'], database=configuration['meta-api-db']['database'])
-		meta_dbconn2 = meta_dbconn.getconn()
-		cursor = meta_dbconn2.cursor()
+		dbconn = sqlite3.connect(configuration['db']['database'])
+		meta_dbconn = sqlite3.connect(configuration['meta-api-db']['database'])
+		cursor = meta_dbconn.cursor()
 		cursor.execute('select * from routes')
 		routes = cursor.fetchall()
+		print(routes)
 		for list in routes:
 			resource = coreResource(configuration, meta_dbconn, dbconn, list[2] )
 			app.add_route(list[1], resource)

@@ -1,6 +1,5 @@
 import sys
-import psycopg2
-import psycopg2.extras
+import sqlite3
 import json
 import logging
 import falcon
@@ -30,32 +29,30 @@ class coreResource(object):
     	result = []
     	try:
     		queryResult = []
-    		dbconn = self.dbconn.getconn()
-    		cursor = dbconn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+    		cursor = self.dbconn.cursor()
     		if len(variabs) > 0:
     			cursor.execute(self.get_vars(variabs))
     		elif len(variabs) == 0:
     			cursor.execute(self.query)
-    		dbconn.commit()
+    		self.dbconn.commit()
     		queryResult = cursor.fetchall()
     		return queryResult
     	except:
     		return queryResult
-    	finally:
-    		self.dbconn.putconn(dbconn)
 
     def get_vars(self, variabs):
     	try:
-    		dbconn = self.dbconn.getconn()
-    		cursor = dbconn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+    		cursor = self.dbconn.cursor()
     		editedQuery = self.query
     		if len(variabs.values()) > 0:
     			for key, value in variabs.items():
     				editedQuery = editedQuery.replace('{'+key +'}', "'" + value + "'", 1)
     		return editedQuery
-    	finally:
-    		self.dbconn.putconn(dbconn)
-
+    	except:
+    		exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+    		print('exception %s was thrown' % exceptionValue)
+    		raise falcon.HTTPBadRequest('exception %s was thrown' % exceptionValue)
+                  
 class addRouteResource(object):
 
     def __init__(self, config, meta_dbconn, dbconn, app ):
@@ -71,18 +68,17 @@ class addRouteResource(object):
             response = req.stream.read().decode("utf-8")
             stuff = json.loads(response)
             print(stuff['route'])
-            meta_dbconn = self.meta_dbconn.getconn()
-            cursor = meta_dbconn.cursor()
+            cursor = self.meta_dbconn.cursor()
             resource = self.coreResource(self.config, self.meta_dbconn, self.dbconn, stuff['query'])
             self.app.add_route(stuff['route'], resource)
-            cursor.execute("""INSERT INTO routes (route, query) VALUES (%s, %s);""", (stuff['route'] ,stuff['query'] ))
-            meta_dbconn.commit()
+            cursor.execute("""INSERT INTO routes (route, query) VALUES (?, ?);""", (stuff['route'] ,stuff['query'] ))
+            self.meta_dbconn.commit()
             resp.status = falcon.HTTP_201
             resp.body = fmt('Sucessfully added route!')
         except:
             exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
             print('exception %s was thrown' % exceptionValue)
-            raise falcon.HTTPBadRequest('Missing thing','A thing must be submitted in the request body.')
+            raise falcon.HTTPBadRequest('exception %s was thrown' % exceptionValue)
         #resource = self.coreResouce(self.config, self.meta_dbconn, self.dbconn, doc['query'], list[2] )
         #app.add_route(doc['route', resource)
 
@@ -90,7 +86,7 @@ class addDataResource(object):
 
     def __init__(self, config, meta_dbconn, dbconn):
         self.logger = logging.getLogger(__name__)
-        self.config= config
+        self.config = config
         self.meta_dbconn = meta_dbconn
         self.dbconn = dbconn
         self.coreResource = coreResource
@@ -100,8 +96,7 @@ class addDataResource(object):
             response = req.stream.read().decode("utf-8")
             stuff = json.loads(response)
             print(stuff['data'])
-            dbconn = self.dbconn.getconn()
-            cursor = dbconn.cursor()
+            cursor = self.dbconn.cursor()
             columns = '('
             values = '('
             for list in stuff['data']:
@@ -115,15 +110,13 @@ class addDataResource(object):
             print(columns)
             print(values)
             cursor.execute("INSERT INTO "+ stuff['table'] +   columns  +" VALUES " + values )
-            dbconn.commit()
+            self.dbconn.commit()
             resp.status = falcon.HTTP_201
             resp.body = fmt('Sucessfully added data!')
         except:
             exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
             print('exception %s was thrown' % exceptionValue)
             raise falcon.HTTPBadRequest('exception %s was thrown' % exceptionValue)
-        finally:
-            self.dbconn.putconn(dbconn)
 
 
 class addTableResource(object):
@@ -139,18 +132,15 @@ class addTableResource(object):
             response = req.stream.read().decode("utf-8")
             stuff = json.loads(response)
             print(stuff['route'])
-            dbconn = self.dbconn.getconn()
-            cursor = dbconn.cursor()
-            cursor.execute("Create Table %s %s " (stuff['name'], stuff['table_params']))
-            dbconn.commit()
+            cursor = self.dbconn.cursor()
+            cursor.execute("Create Table ? ? " (stuff['name'], stuff['table_params']))
+            self.dbconn.commit()
             resp.status = falcon.HTTP_201
             resp.body = fmt('Sucessfully added table!')
         except:
             exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
             print('exception %s was thrown' % exceptionValue)
             raise falcon.HTTPBadRequest('exception %s was thrown' % exceptionValue)
-        finally:
-            self.dbconn.putconn(dbconn)
 
 class getAllRoutesResource(object):
 
@@ -172,13 +162,14 @@ class getAllRoutesResource(object):
 
     def get_routes(self):
         try:
-            meta_dbconn = self.meta_dbconn.getconn()
-            cursor = meta_dbconn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
+            cursor = self.meta_dbconn.cursor()
             cursor.execute("select * from routes")
             routes = cursor.fetchall()
             return routes
-        finally:
-            self.meta_dbconn.putconn(meta_dbconn)
+        except:
+            exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+            print('exception %s was thrown' % exceptionValue)
+            raise falcon.HTTPBadRequest('exception %s was thrown' % exceptionValue)
 
 class deleteRoutesResource(object):
 
@@ -199,14 +190,12 @@ class deleteRoutesResource(object):
 
     def delete_route(self):
         try:
-            meta_dbconn = self.meta_dbconn.getconn()
-            cursor = meta_dbconn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
-            cursor.execute("DELETE FROM routes where id = %s" % self.id)
-            meta_dbconn.commit()
+            cursor = self.meta_dbconn.cursor()
+            cursor.execute("DELETE FROM routes where id = ?",  self.id)
+            self.meta_dbconn.commit()
             return "Sucessfully deleted route!"
         except:
             exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
             print('exception %s was thrown' % exceptionValue)
             return "Oops something went wrong. Maybe there isn't a route with that id"
-        finally:
-            self.meta_dbconn.putconn(meta_dbconn)
+            
